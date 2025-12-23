@@ -88,6 +88,18 @@
             color: var(--primary); 
             animation: pulse 2s infinite;
         }
+		
+		#status-devices { 
+            text-align: center; 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            margin-bottom: 20px; 
+            padding: 12px; 
+            border-radius: 12px; 
+            background: rgba(59, 130, 246, 0.1); 
+            color: var(--primary); 
+            animation: pulse 2s infinite;
+        }
 
         @keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
 
@@ -181,16 +193,14 @@
         <i class="fas fa-user"></i>
         <input type="text" id="userName" placeholder="Nhập tên của bạn..." maxlength="20">
     </div>
-
-    <div id="status-text"><i class="fas fa-circle-notch fa-spin"></i> Đang tìm kiếm thiết bị xung quanh...</div>
+	
+	<div id="status-text"><i class="fas fa-circle-notch fa-spin"></i> Đang kiểm tra IP</div>
+	
+    <div id="status-devices"><i class="fas fa-circle-notch fa-spin"></i> Đang tìm kiếm thiết bị xung quanh...</div>
     
     <div class="device-list" id="devices">
         <div class="device-item">
-            <div class="device-info">
-                <div class="device-icon"><i class="fas fa-mobile-alt"></i></div>
-                <div class="device-name-text"><b>iPhone của Nam</b><span>Sẵn sàng nhận file</span></div>
-            </div>
-            <i class="fas fa-chevron-right" style="color:#475569"></i>
+
         </div>
     </div>
 
