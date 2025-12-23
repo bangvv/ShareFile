@@ -298,26 +298,39 @@ function bindEvents() {
             window.chunks.push(p);
             receivedSize += p.length;
             if (receivedSize % (1024*1024) < 131072) updateUI(receivedSize, meta.size);
-        } else if (h === 3) { 
-		
+        } else if (h === 3) {
 			force100UI(`🎉 Đã nhận xong: ${meta.name}`);
+			
 			const blob = new Blob(window.chunks);
-			saveAs(blob, meta.name);
-			const url = URL.createObjectURL(blob);
-			UI.status.innerHTML = `<a href="${url}" download="${meta.name}" id="downloadLink" style="color:var(--success); text-decoration:underline; font-weight:bold;">Bấm vào đây để lưu file</a>`;
+			window.chunks = []; // Xóa dữ liệu thô để giải phóng RAM
 
-			// Tự động kích hoạt click sau 500ms
-			setTimeout(() => {
-				const link = document.getElementById('downloadLink');
-				if(link) link.click();
-			}, 500);
+			// 1. Kiểm tra xem có phải đang chạy trong WebView của App (có cầu nối AndroidApp) hay không
+			if (window.AndroidApp && typeof window.AndroidApp.saveFileToAndroid === 'function') {
+				const reader = new FileReader();
+				reader.readAsDataURL(blob); 
+				reader.onloadend = function() {
+					const base64data = reader.result.split(',')[1];
+					window.AndroidApp.saveFileToAndroid(base64data, meta.name);
+				};
+			} else {
+				// 2. Nếu là trình duyệt thường (Chrome Android, PC...), dùng cách tải chuẩn
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = meta.name;
+				document.body.appendChild(a); // Thêm vào DOM để chắc chắn hoạt động trên một số trình duyệt mobile
+				a.click();
+				setTimeout(() => {
+					document.body.removeChild(a);
+					URL.revokeObjectURL(url); // Thu hồi link để giải phóng bộ nhớ
+				}, 100);
+			}
 
 			setTimeout(() => peer.send(new Uint8Array([4])), 500);
-			
-        } else if (h === 4) { 
-            isNextReady = true;
-        }
-    });
+		} else if (h === 4) { 
+				isNextReady = true;
+			}
+		});
 
     peer.on('close', () => { peer = null; UI.status.innerText = "Mất kết nối"; });
     peer.on('error', err => { peer = null; console.error(err); });
