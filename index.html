@@ -299,34 +299,32 @@ function bindEvents() {
             receivedSize += p.length;
             if (receivedSize % (1024*1024) < 131072) updateUI(receivedSize, meta.size);
         } else if (h === 3) {
-			force100UI(`🎉 Đã nhận xong: ${meta.name}`);
-			
-			const blob = new Blob(window.chunks);
-			window.chunks = []; // Xóa dữ liệu thô để giải phóng RAM
 
-			// 1. Kiểm tra xem có phải đang chạy trong WebView của App (có cầu nối AndroidApp) hay không
+			force100UI(`🎉 Đã nhận xong: ${meta.name}`);
+				
+			const blob = new Blob(window.chunks);
+			window.chunks = []; // Xóa RAM ngay để tránh crash
+
+			// Kiểm tra xem có đang chạy trong App Android không
 			if (window.AndroidApp && typeof window.AndroidApp.saveFileToAndroid === 'function') {
 				const reader = new FileReader();
 				reader.readAsDataURL(blob); 
 				reader.onloadend = function() {
-					const base64data = reader.result.split(',')[1];
+					// Chuỗi base64 có dạng "data:application/octet-stream;base64,AAAA..."
+					// Ta chỉ lấy phần sau dấu phẩy
+					const base64data = reader.result.split(',')[1]; 
 					window.AndroidApp.saveFileToAndroid(base64data, meta.name);
 				};
 			} else {
-				// 2. Nếu là trình duyệt thường (Chrome Android, PC...), dùng cách tải chuẩn
+				// Nếu chạy trên trình duyệt thường
 				const url = URL.createObjectURL(blob);
 				const a = document.createElement('a');
 				a.href = url;
 				a.download = meta.name;
-				document.body.appendChild(a); // Thêm vào DOM để chắc chắn hoạt động trên một số trình duyệt mobile
 				a.click();
-				setTimeout(() => {
-					document.body.removeChild(a);
-					URL.revokeObjectURL(url); // Thu hồi link để giải phóng bộ nhớ
-				}, 100);
 			}
-
 			setTimeout(() => peer.send(new Uint8Array([4])), 500);
+
 		} else if (h === 4) { 
 				isNextReady = true;
 			}
