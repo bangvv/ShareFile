@@ -219,10 +219,20 @@ const dev = getDevice();
 UI.name.value = localStorage.getItem('lan_name') || (dev.type + " " + myId);
 
 function updateProfile() {
-    if (!myIP) return;
-    localStorage.setItem('lan_name', UI.name.value);
-    db.ref("users/" + myId).set({ ip: myIP, name: UI.name.value, icon: dev.icon, type: dev.type });
+    if (!myIP || !db) return;
+    const name = UI.name.value || (dev.type + " " + myId);
+    localStorage.setItem('lan_name', name);
+    
+    // Ghi đè lên Firebase để báo hiệu thiết bị vẫn đang online
+    db.ref("users/" + myId).set({ 
+        ip: myIP, 
+        name: name, 
+        icon: dev.icon, 
+        type: dev.type,
+        lastSeen: Date.now() // Thêm thời gian cập nhật để kiểm tra
+    });
 }
+
 UI.name.onchange = updateProfile;
 
 fetch("https://api.ipify.org?format=json").then(r => r.json()).then(d => {
@@ -301,17 +311,12 @@ function bindEvents() {
         } else if (h === 3) {
 
 			force100UI(`🎉 Đã nhận xong: ${meta.name}`);
-				
 			const blob = new Blob(window.chunks);
-			window.chunks = []; // Xóa RAM ngay để tránh crash
-
-			// Kiểm tra xem có đang chạy trong App Android không
+			window.chunks = [];
 			if (window.AndroidApp && typeof window.AndroidApp.saveFileToAndroid === 'function') {
 				const reader = new FileReader();
 				reader.readAsDataURL(blob); 
 				reader.onloadend = function() {
-					// Chuỗi base64 có dạng "data:application/octet-stream;base64,AAAA..."
-					// Ta chỉ lấy phần sau dấu phẩy
 					const base64data = reader.result.split(',')[1]; 
 					window.AndroidApp.saveFileToAndroid(base64data, meta.name);
 				};
@@ -411,6 +416,16 @@ UI.file.onchange = () => {
         if (peer && peer.connected) handleMultiSender(fs);
     }
 };
+
+setInterval(() => {
+    if (myIP) {
+        // Cập nhật lại thời gian sống của mình trên Firebase
+        updateProfile();
+        
+        // Thông báo trạng thái nhẹ nhàng để người dùng biết app vẫn đang quét
+        console.log("Đang tự động quét thiết bị...");
+    }
+}, 3000);
 </script>
 </body>
 </html>
