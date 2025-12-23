@@ -3,67 +3,218 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LAN Turbo - Pro Multi</title>
+    
+    <title>Local Send File Pro | Chuyển File P2P Tốc Độ Cao</title>
+    <meta name="description" content="Gửi file không giới hạn dung lượng qua mạng nội bộ và Internet. Bảo mật P2P, tốc độ cao, không cần cài đặt.">
+    <meta name="keywords" content="gửi file nhanh, chuyển dữ liệu, p2p file transfer, local send, gửi file lớn">
+    <meta name="author" content="LocalSendPro">
+    
+    <link rel="icon" type="image/png" href="image/icon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <script src="https://unpkg.com/simple-peer@9/simplepeer.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
-        :root { --primary: #3b82f6; --success: #10b981; --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 15px; margin: 0; }
-        .card { width: 100%; max-width: 450px; background: var(--card); padding: 25px; border-radius: 24px; border: 1px solid #334155; box-shadow: 0 20px 40px rgba(0,0,0,0.4); margin-top: 10px; }
-        h2 { margin: 0 0 20px; font-size: 1.5rem; color: var(--primary); text-align: center; font-weight: 800; letter-spacing: -0.5px; }
-        
-        .name-box { margin-bottom: 20px; }
-        .name-box input { width: 100%; background: #0f172a; border: 2px solid #334155; color: white; padding: 12px 15px; border-radius: 12px; outline: none; font-size: 1rem; transition: 0.3s; }
-        .name-box input:focus { border-color: var(--primary); }
+        :root { 
+            --primary: #3b82f6; 
+            --primary-hover: #2563eb;
+            --success: #10b981; 
+            --bg: #0f172a; 
+            --card: rgba(30, 41, 59, 0.7); 
+            --text: #f1f5f9; 
+        }
 
-        #status-text { text-align: center; font-size: 0.85rem; font-weight: 700; margin-bottom: 20px; padding: 10px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); color: var(--primary); transition: 0.3s; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
 
-        .device-list { margin-bottom: 20px; display: grid; gap: 12px; }
-        .device-item { padding: 16px; background: #0f172a; border-radius: 16px; border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; }
-        .device-item:active { transform: scale(0.97); background: #1e293b; }
+        body { 
+            background: radial-gradient(circle at top center, #1e293b 0%, #0f172a 100%); 
+            color: var(--text); 
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+            padding: 20px; 
+            margin: 0; 
+            min-height: 100vh;
+        }
+
+        .card { 
+            width: 100%; 
+            max-width: 480px; 
+            background: var(--card); 
+            padding: 30px; 
+            border-radius: 28px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            margin-top: 20px;
+        }
+
+        h2 { 
+            margin: 0 0 25px; 
+            font-size: 1.6rem; 
+            background: linear-gradient(to right, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center; 
+            font-weight: 800; 
+            letter-spacing: -1px;
+        }
+
+        .name-box { margin-bottom: 25px; position: relative; }
+        .name-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #64748b; }
+        .name-box input { 
+            width: 100%; 
+            background: rgba(15, 23, 42, 0.6); 
+            border: 1px solid #334155; 
+            color: white; 
+            padding: 14px 15px 14px 45px; 
+            border-radius: 14px; 
+            outline: none; 
+            font-size: 1rem; 
+            transition: 0.3s; 
+        }
+        .name-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+
+        #status-text { 
+            text-align: center; 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            margin-bottom: 20px; 
+            padding: 12px; 
+            border-radius: 12px; 
+            background: rgba(59, 130, 246, 0.1); 
+            color: var(--primary); 
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
+
+        .device-list { margin-bottom: 25px; display: grid; gap: 12px; }
+        .device-item { 
+            padding: 16px; 
+            background: rgba(15, 23, 42, 0.5); 
+            border-radius: 18px; 
+            border: 1px solid #334155; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            cursor: pointer; 
+            transition: 0.2s ease; 
+        }
+        .device-item:hover { background: rgba(51, 65, 85, 0.6); transform: translateY(-2px); border-color: var(--primary); }
         .device-info { display: flex; align-items: center; gap: 15px; }
-        .device-icon { font-size: 1.8rem; background: #1e293b; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+        .device-icon { 
+            font-size: 1.4rem; 
+            background: #1e293b; 
+            width: 45px; 
+            height: 45px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 12px; 
+            color: var(--primary);
+        }
         .device-name-text b { display: block; font-size: 1rem; color: #fff; }
-        .device-name-text span { font-size: 0.75rem; color: #64748b; }
+        .device-name-text span { font-size: 0.75rem; color: #94a3b8; }
 
-        .file-box { border: 2px dashed #475569; padding: 25px; text-align: center; border-radius: 20px; margin-bottom: 20px; background: rgba(255,255,255,0.02); }
-        #file-info { font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px; font-style: italic; }
-        .btn-upload { background: var(--primary); color: white; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: 700; display: block; width: 100%; text-align: center; }
+        .file-box { 
+            border: 2px dashed #475569; 
+            padding: 30px 20px; 
+            text-align: center; 
+            border-radius: 24px; 
+            margin-bottom: 20px; 
+            background: rgba(255,255,255,0.03); 
+            transition: 0.3s;
+        }
+        .file-box:hover { border-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+        #file-info { font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px; }
+
+        .btn-upload { 
+            background: var(--primary); 
+            color: white; 
+            padding: 16px; 
+            border-radius: 14px; 
+            cursor: pointer; 
+            font-weight: 700; 
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%; 
+            transition: 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+        }
+        .btn-upload:hover { background: var(--primary-hover); transform: scale(1.02); }
+        #fileInput { display: none; }
+
+        .progress-container { 
+            display: none; 
+            margin-top: 25px; 
+            background: #0f172a; 
+            padding: 20px; 
+            border-radius: 20px; 
+            border: 1px solid #334155; 
+        }
+        .progress-bg { width: 100%; height: 10px; background: #334155; border-radius: 5px; overflow: hidden; margin-bottom: 12px; }
+        .progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); transition: width 0.1s linear; }
+        .stats { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #94a3b8; }
         
-        .progress-container { display: none; margin-top: 25px; background: #0f172a; padding: 20px; border-radius: 18px; border: 1px solid #334155; }
-        .progress-bg { width: 100%; height: 12px; background: #334155; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
-        .progress-bar { width: 0%; height: 100%; background: var(--primary); border-radius: 6px; transition: width 0.1s linear; }
-        .stats { display: flex; justify-content: space-between; font-family: monospace; font-size: 0.95rem; font-weight: 700; }
-        #cur-file { font-size: 0.8rem; color: var(--primary); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* Footer SEO */
+        .footer-info {
+            max-width: 480px;
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #64748b;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Local Send File Pro</h2>
+    <h2><i class="fas fa-paper-plane"></i> Local Send Pro</h2>
     
     <div class="name-box">
-        <input type="text" id="userName" placeholder="Tên hiển thị..." maxlength="20">
+        <i class="fas fa-user"></i>
+        <input type="text" id="userName" placeholder="Nhập tên của bạn..." maxlength="20">
     </div>
 
-    <div id="status-text">Đang khởi tạo...</div>
-    <div class="device-list" id="devices"></div>
+    <div id="status-text"><i class="fas fa-circle-notch fa-spin"></i> Đang tìm kiếm thiết bị xung quanh...</div>
+    
+    <div class="device-list" id="devices">
+        <div class="device-item">
+            <div class="device-info">
+                <div class="device-icon"><i class="fas fa-mobile-alt"></i></div>
+                <div class="device-name-text"><b>iPhone của Nam</b><span>Sẵn sàng nhận file</span></div>
+            </div>
+            <i class="fas fa-chevron-right" style="color:#475569"></i>
+        </div>
+    </div>
 
     <div class="file-box">
-        <div id="file-info">Chưa chọn file nào</div>
-        <label class="btn-upload">📂 CHỌN FILE (NHIỀU) <input type="file" id="fileInput" multiple></label>
+        <div id="file-info"><i class="fas fa-info-circle"></i> Chọn file để bắt đầu chia sẻ</div>
+        <label class="btn-upload">
+            <i class="fas fa-cloud-upload-alt"></i> CHỌN FILE GỬI NGAY
+            <input type="file" id="fileInput" multiple>
+        </label>
     </div>
 
     <div class="progress-container" id="progCont">
-        <div id="cur-file"></div>
+        <div id="cur-file" style="font-size: 0.8rem; margin-bottom: 8px; color: var(--primary);">file_name.zip</div>
         <div class="progress-bg"><div class="progress-bar" id="bar"></div></div>
         <div class="stats">
             <span id="percent">0%</span>
-            <span id="speed">0.0 MB/s</span>
+            <span id="speed"><i class="fas fa-bolt"></i> 0.0 MB/s</span>
         </div>
     </div>
+</div>
+
+<div class="footer-info">
+    <p><b>Local Send File Pro</b> - Giải pháp chuyển dữ liệu P2P bảo mật.<br>
+    Không lưu trữ file trên server, tốc độ truyền tải tối đa theo đường truyền mạng của bạn.</p>
 </div>
 
 <script src="firebase-config.js"></script>
