@@ -189,7 +189,7 @@
 </div>
 
 <script src="firebase-config.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script>
 const myId = Math.random().toString(36).slice(2, 8);
 let myIP = "", peer = null, startTime = 0, meta = null, receivedSize = 0, isNextReady = false;
@@ -299,12 +299,21 @@ function bindEvents() {
             receivedSize += p.length;
             if (receivedSize % (1024*1024) < 131072) updateUI(receivedSize, meta.size);
         } else if (h === 3) { 
-            force100UI(`🎉 Đã nhận xong: ${meta.name}`);
-            const blob = new Blob(window.chunks);
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = meta.name; a.click();
-            setTimeout(() => peer.send(new Uint8Array([4])), 500);
+		
+			force100UI(`🎉 Đã nhận xong: ${meta.name}`);
+			const blob = new Blob(window.chunks);
+			saveAs(blob, meta.name);
+			const url = URL.createObjectURL(blob);
+			UI.status.innerHTML = `<a href="${url}" download="${meta.name}" id="downloadLink" style="color:var(--success); text-decoration:underline; font-weight:bold;">Bấm vào đây để lưu file</a>`;
+
+			// Tự động kích hoạt click sau 500ms
+			setTimeout(() => {
+				const link = document.getElementById('downloadLink');
+				if(link) link.click();
+			}, 500);
+
+			setTimeout(() => peer.send(new Uint8Array([4])), 500);
+			
         } else if (h === 4) { 
             isNextReady = true;
         }
