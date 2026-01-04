@@ -2,430 +2,227 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <title>Local Send File Pro</title>
-    <meta name="description" content="Gửi file không giới hạn dung lượng qua mạng nội bộ và Internet. Bảo mật P2P, tốc độ cao, không cần cài đặt.">
-    <meta name="keywords" content="gửi file nhanh, chuyển dữ liệu, p2p file transfer, local send, gửi file lớn">
-    <meta name="author" content="LocalSendPro">
-    
-    <link rel="icon" type="image/png" href="image/icon.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAN File Transfer Ultra</title>
     <script src="https://unpkg.com/simple-peer@9/simplepeer.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
     <style>
-    :root { 
-        --primary: #3b82f6; 
-        --primary-hover: #2563eb;
-        --success: #10b981; 
-        --bg: #0b0f1a; 
-        --card: rgba(30, 41, 59, 0.75); 
-        --text: #f8fafc; 
-    }
-
-    * { 
-        box-sizing: border-box; 
-        -webkit-tap-highlight-color: transparent;
-        font-family: 'Inter', -apple-system, system-ui, sans-serif; 
-    }
-
-    /* Khóa scroll toàn màn hình trên cả PC và Mobile */
-    html, body {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden; 
-        position: fixed;
-    }
-
-    body { 
-        background: radial-gradient(circle at 50% 0%, #1e293b 0%, #0b0f1a 100%); 
-        color: var(--text); 
-        display: flex; 
-        align-items: center; 
-        justify-content: center;
-        padding: 15px;
-    }
-
-    /* Card luôn nằm giữa và không bao giờ quá cao */
-    .card { 
-        width: 100%; 
-        max-width: 480px; 
-        max-height: 95vh; /* Giới hạn chiều cao card */
-        background: var(--card); 
-        padding: 24px; 
-        border-radius: 32px; 
-        border: 1px solid rgba(255, 255, 255, 0.1); 
-        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        display: flex;
-        flex-direction: column; /* Chia card thành các phần dọc */
-    }
-
-    h2 { 
-        margin: 0 0 15px; 
-        font-size: 1.4rem; 
-        background: linear-gradient(135deg, #93c5fd, #3b82f6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-align: center; 
-        font-weight: 800;
-        flex-shrink: 0; /* Không bị bóp méo khi màn hình nhỏ */
-    }
-
-    /* Vùng chứa các thông báo trạng thái */
-    .status-container { flex-shrink: 0; }
-
-    #status-text, #status-devices { 
-        text-align: center; font-size: 0.8rem; font-weight: 600; 
-        margin-bottom: 10px; padding: 10px; border-radius: 12px;
-        background: rgba(59, 130, 246, 0.1); color: var(--primary);
-        animation: pulse 2s infinite;
-    }
-
-    .name-box { margin-bottom: 15px; position: relative; flex-shrink: 0; }
-    .name-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-    .name-box input { 
-        width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; 
-        color: white; padding: 12px 15px 12px 40px; border-radius: 14px; 
-        outline: none; font-size: 16px; /* Chặn auto-zoom trên iPhone */
-    }
-
-    /* VÙNG CUỘN DUY NHẤT: Danh sách thiết bị */
-    .device-list { 
-        margin-bottom: 15px; 
-        display: grid; 
-        gap: 10px; 
-        overflow-y: auto; /* Chỉ cho phép cuộn tại đây */
-        padding-right: 5px;
-        flex-grow: 1; /* Tự động dãn để chiếm không gian trống */
-    }
-    
-    /* Custom Scrollbar cho danh sách thiết bị */
-    .device-list::-webkit-scrollbar { width: 4px; }
-    .device-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-
-        .device-item { padding: 16px; background: #0f172a; border-radius: 16px; border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; }
-        .device-item:active { transform: scale(0.97); background: #1e293b; }
-        .device-info { display: flex; align-items: center; gap: 15px; }
-        .device-icon { font-size: 1.8rem; background: #1e293b; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
-        .device-name-text b { display: block; font-size: 1rem; color: #fff; }
-        .device-name-text span { font-size: 0.75rem; color: #64748b; }
-		
-
-    /* File Box và Nút Gửi luôn nằm cố định ở dưới Card */
-    .file-box { 
-        border: 2px dashed #475569; padding: 15px; 
-        text-align: center; border-radius: 20px; 
-        background: rgba(255,255,255,0.02); margin-top: auto; flex-shrink: 0;
-    }
-    #file-info { font-size: 0.75rem; color: #94a3b8; margin-bottom: 10px; }
-
-    .btn-upload { 
-        background: var(--primary); color: white; padding: 14px; 
-        border-radius: 14px; cursor: pointer; font-weight: 700; 
-        display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem;
-    }
-    
-	.progress-container { display: none; margin-top: 25px; background: #0f172a; padding: 20px; border-radius: 18px; border: 1px solid #334155; }
-	.progress-bg { width: 100%; height: 12px; background: #334155; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
-	.progress-bar { width: 0%; height: 100%; background: var(--primary); border-radius: 6px; transition: width 0.1s linear; }
-	.stats { display: flex; justify-content: space-between; font-family: monospace; font-size: 0.95rem; font-weight: 700; }
-	#cur-file { font-size: 0.8rem; color: var(--primary); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .footer-info {
-        position: absolute; bottom: 10px; width: 100%; text-align: center;
-        font-size: 0.7rem; color: #64748b; padding: 0 10px; pointer-events: none;
-    }
-
-    @keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
-</style>
+        :root { --p: #2563eb; --bg: #0f172a; --card: #1e293b; --txt: #f8fafc; }
+        body { background: var(--bg); color: var(--txt); font-family: sans-serif; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .container { width: 100%; max-width: 500px; background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .status { background: rgba(37,99,235,0.1); color: #60a5fa; padding: 10px; border-radius: 10px; text-align: center; font-size: 0.9rem; margin: 15px 0; border: 1px solid rgba(37,99,235,0.2); }
+        .device-item { background: #334155; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .device-item:hover { background: #475569; }
+        .progress-box { display: none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 12px; }
+        .bar-bg { width: 100%; height: 10px; background: #334155; border-radius: 5px; overflow: hidden; margin: 10px 0; }
+        .bar-fill { width: 0%; height: 100%; background: var(--p); transition: width 0.1s; }
+        .btn-select { display: block; width: 100%; background: var(--p); color: white; text-align: center; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        input[type="file"] { display: none; }
+        input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+    </style>
 </head>
 <body>
 
-<div class="card">
-    <h2><i class="fas fa-paper-plane"></i> Local Send Pro</h2>
+<div class="container">
+    <h3 style="margin-top:0">🚀 LAN Transfer Pro</h3>
     
-    <div class="name-box">
-        <i class="fas fa-user"></i>
-        <input type="text" id="userName" placeholder="Nhập tên của bạn..." maxlength="20">
-    </div>
-	
-	<div id="status-text"><i class="fas fa-circle-notch fa-spin"></i> Đang kiểm tra IP</div>
-	
-    <div id="status-devices"><i class="fas fa-circle-notch fa-spin"></i> Đang tìm kiếm thiết bị xung quanh...</div>
-    
-    <div class="device-list" id="devices">
-        <div class="device-item">
+    <input type="text" id="userName" placeholder="Nhập tên thiết bị...">
+    <div id="stt" class="status">Đang khởi tạo mạng...</div>
 
-        </div>
-    </div>
+    <div id="devices"></div>
 
-    <div class="file-box">
-        <div id="file-info"><i class="fas fa-info-circle"></i> Chọn file để bắt đầu chia sẻ</div>
-        <label class="btn-upload">
-            <i class="fas fa-cloud-upload-alt"></i> 
-            <input type="file" id="fileInput" multiple>
+    <div style="margin-top: 20px;">
+        <div id="fileInfo" style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 5px;">Chưa chọn file</div>
+        <label class="btn-select">
+            📁 CHỌN FILE GỬI
+            <input type="file" id="fileInp" multiple>
         </label>
     </div>
 
-    <div class="progress-container" id="progCont">
-        <div id="cur-file"></div>
-        <div class="progress-bg"><div class="progress-bar" id="bar"></div></div>
-        <div class="stats">
-            <span id="percent">0%</span>
-            <span id="speed">0.0 MB/s</span>
+    <div class="progress-box" id="pBox">
+        <div id="fName" style="font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+        <div class="bar-bg"><div class="bar-fill" id="bar"></div></div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+            <span id="pct">0%</span>
+            <span id="spd">0 MB/s</span>
         </div>
     </div>
-</div>
-
-<div class="footer-info">
-    <p><b>Local Send File Pro</b> - Giải pháp chuyển dữ liệu P2P bảo mật.<br>
-    Không lưu trữ file trên server, tốc độ truyền tải tối đa theo đường truyền mạng của bạn.</p>
 </div>
 
 <script src="firebase-config.js"></script>
 
 <script>
-const myId = Math.random().toString(36).slice(2, 8);
-let myIP = "", peer = null, startTime = 0, meta = null, receivedSize = 0, isNextReady = false;
-let targetId = null; // Lưu ID thiết bị đang kết nối
+const myId = Math.random().toString(36).substring(2, 8);
+let peer = null, targetId = null, myIP = "";
+let wStream = null, chunks = [], startTime = 0;
 
 const UI = {
-    status: document.getElementById('status-text'),
-    devices: document.getElementById('devices'),
-    file: document.getElementById('fileInput'),
-    bar: document.getElementById('bar'),
-    percent: document.getElementById('percent'),
-    speed: document.getElementById('speed'),
-    prog: document.getElementById('progCont'),
+    stt: document.getElementById('stt'),
+    devs: document.getElementById('devices'),
     name: document.getElementById('userName'),
-    curFile: document.getElementById('cur-file'),
-    fileInfo: document.getElementById('file-info')
+    file: document.getElementById('fileInp'),
+    pBox: document.getElementById('pBox'),
+    bar: document.getElementById('bar'),
+    pct: document.getElementById('pct'),
+    spd: document.getElementById('spd'),
+    fName: document.getElementById('fName')
 };
 
-const getDevice = () => {
-    const ua = navigator.userAgent;
-    if (/android/i.test(ua)) return { icon: "🤖", type: "Android" };
-    if (/iPad|iPhone|iPod/.test(ua)) return { icon: "🍎", type: "iPhone" };
-    if (/Windows/i.test(ua)) return { icon: "💻", type: "Windows PC" };
-    return { icon: "🌐", type: "Thiết bị" };
-};
-const dev = getDevice();
-UI.name.value = localStorage.getItem('lan_name') || (dev.type + " " + myId);
+UI.name.value = localStorage.getItem('lan_n') || "Device-" + myId;
 
-function updateProfile() {
-    if (!myIP || !db) return;
-    const name = UI.name.value || (dev.type + " " + myId);
-    localStorage.setItem('lan_name', name);
-    
-    // Ghi đè lên Firebase để báo hiệu thiết bị vẫn đang online
-    db.ref("users/" + myId).set({ 
-        ip: myIP, 
-        name: name, 
-        icon: dev.icon, 
-        type: dev.type,
-        lastSeen: Date.now() // Thêm thời gian cập nhật để kiểm tra
-    });
-}
-
-UI.name.onchange = updateProfile;
-
+// 1. Lấy IP và Kết nối Firebase
 fetch("https://api.ipify.org?format=json").then(r => r.json()).then(d => {
     myIP = d.ip;
-    db.ref("users/" + myId).onDisconnect().remove();
-    updateProfile();
-    UI.status.innerText = "Sẵn sàng (IP: " + d.ip + ")";
-    db.ref("users").on("value", snap => {
-        UI.devices.innerHTML = "";
-        snap.forEach(u => {
-            if (u.key !== myId && u.val().ip === d.ip) {
-                const v = u.val();
-                const div = document.createElement('div');
-                div.className = 'device-item';
-                div.innerHTML = `<div class="device-info"><div class="device-icon">${v.icon}</div><div class="device-name-text"><b>${v.name}</b><span>${v.type} (#${u.key})</span></div></div><span>➔</span>`;
-                div.onclick = () => {
-                    targetId = u.key;
-                    startConnect(u.key);
-                };
-                UI.devices.appendChild(div);
+    UI.stt.innerText = "Sẵn sàng (LAN: " + d.ip + ")";
+    
+    const ref = db.ref("users/" + myId);
+    ref.onDisconnect().remove();
+    
+    const update = () => {
+        localStorage.setItem('lan_n', UI.name.value);
+        ref.set({ ip: myIP, name: UI.name.value, last: Date.now() });
+    };
+    UI.name.onchange = update;
+    update();
+
+    db.ref("users").on("value", s => {
+        UI.devs.innerHTML = "";
+        s.forEach(u => {
+            if (u.key !== myId && u.val().ip === myIP) {
+                const d = document.createElement('div');
+                d.className = 'device-item';
+                d.innerHTML = `<span><b>${u.val().name}</b></span> <span>Gửi ➔</span>`;
+                d.onclick = () => { targetId = u.key; connect(u.key); };
+                UI.devs.appendChild(d);
             }
         });
     });
 });
 
-db.ref("signal/" + myId).on("value", snap => {
-    if (!snap.exists()) return;
-    const m = snap.val();
-    targetId = m.from; // Lưu lại ID người gửi signal
-    if (!peer) { 
-        peer = new SimplePeer({ initiator: false, trickle: false }); 
-        bindEvents(); 
-    }
-    peer.signal(m.data);
-    db.ref("signal/" + myId).remove();
+// 2. Tín hiệu WebRTC
+db.ref("sig/" + myId).on("value", s => {
+    if (!s.exists()) return;
+    const m = s.val();
+    targetId = m.f;
+    if (!peer) { peer = new SimplePeer({ initiator: false, trickle: false }); bind(); }
+    peer.signal(m.d);
+    db.ref("sig/" + myId).remove();
 });
 
-function startConnect(tid) {
-    if (peer) {
-        // Nếu đã có kết nối, kiểm tra file và gửi luôn
-        if (UI.file.files.length > 0) handleMultiSender(UI.file.files);
-        else alert("Vui lòng chọn file!");
-        return;
-    }
-    UI.status.innerText = "Đang kết nối...";
+function connect(tid) {
+    if (peer) { sendFiles(); return; }
+    UI.stt.innerText = "Đang kết nối...";
     peer = new SimplePeer({ initiator: true, trickle: false });
-    bindEvents();
+    bind();
 }
 
-function bindEvents() {
-    peer.on('signal', d => db.ref("signal/" + targetId).set({ from: myId, data: d }));
-    
-    peer.on('connect', () => {
-        UI.status.innerText = "✅ Đã kết nối!";
-        UI.status.style.color = "var(--success)";
-        // Nếu máy này là người chủ động nhấn kết nối VÀ có file thì gửi luôn
-        if (UI.file.files.length > 0 && peer.initiator) {
-            handleMultiSender(UI.file.files);
-        }
+function bind() {
+    peer.on('signal', d => db.ref("sig/" + targetId).set({ f: myId, d: d }));
+    peer.on('connect', () => { 
+        UI.stt.innerText = "✅ Đã kết nối"; 
+        if (UI.file.files.length > 0) sendFiles();
     });
 
-    peer.on('data', async d => {
-        const h = d[0], p = d.slice(1);
-        if (h === 2) { 
-            meta = JSON.parse(new TextDecoder().decode(p));
-            receivedSize = 0; startTime = Date.now();
-            UI.prog.style.display = "block";
-            UI.curFile.innerText = "📥 Đang nhận: " + meta.name;
-            UI.bar.style.background = "var(--primary)";
-            UI.bar.style.width = "0%";
-            window.chunks = [];
-        } else if (h === 1) { 
-            window.chunks.push(p);
-            receivedSize += p.length;
-            if (receivedSize % (1024*1024) < 131072) updateUI(receivedSize, meta.size);
-        } else if (h === 3) {
-
-			force100UI(`🎉 Đã nhận xong: ${meta.name}`);
-			const blob = new Blob(window.chunks);
-			window.chunks = [];
-			if (window.AndroidApp && typeof window.AndroidApp.saveFileToAndroid === 'function') {
-				const reader = new FileReader();
-				reader.readAsDataURL(blob); 
-				reader.onloadend = function() {
-					const base64data = reader.result.split(',')[1]; 
-					window.AndroidApp.saveFileToAndroid(base64data, meta.name);
-				};
-			} else {
-				// Nếu chạy trên trình duyệt thường
-				const url = URL.createObjectURL(blob);
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = meta.name;
-				a.click();
-			}
-			setTimeout(() => peer.send(new Uint8Array([4])), 500);
-
-		} else if (h === 4) { 
-				isNextReady = true;
-			}
-		});
-
-    peer.on('close', () => { peer = null; UI.status.innerText = "Mất kết nối"; });
-    peer.on('error', err => { peer = null; console.error(err); });
+    peer.on('data', async data => {
+        const type = data[0], payload = data.slice(1);
+        
+        if (type === 2) { // Metadata
+            const meta = JSON.parse(new TextDecoder().decode(payload));
+            UI.pBox.style.display = "block";
+            UI.fName.innerText = "📥 Đang nhận: " + meta.n;
+            startTime = Date.now();
+            
+            // CHIẾN THUẬT LƯU: Ưu tiên Stream, nếu không hỗ trợ thì dùng RAM (cho Mobile)
+            if (window.showSaveFilePicker) {
+                try {
+                    const h = await window.showSaveFilePicker({ suggestedName: meta.n });
+                    wStream = await h.createWritable();
+                } catch(e) { wStream = null; chunks = []; }
+            } else { wStream = null; chunks = []; }
+            peer.send(new Uint8Array([5])); // Báo đã sẵn sàng nhận
+        } 
+        else if (type === 1) { // Chunks
+            if (wStream) await wStream.write(payload);
+            else chunks.push(payload);
+            updateUI(payload.length, 0, true); 
+        } 
+        else if (type === 3) { // Kết thúc
+            if (wStream) { await wStream.close(); wStream = null; }
+            else {
+                const b = new Blob(chunks);
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(b); a.download = "received_file"; a.click();
+                chunks = [];
+            }
+            UI.stt.innerText = "🎉 Đã nhận xong!";
+            peer.send(new Uint8Array([4]));
+        }
+    });
 }
 
-async function handleMultiSender(files) {
-    if (!peer || !peer.connected) return alert("Chưa có kết nối!");
-    UI.prog.style.display = "block";
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        isNextReady = false;
-        UI.curFile.innerText = `📤 [${i+1}/${files.length}] ${file.name}`;
-        UI.status.innerText = `Đang gửi file ${i+1}/${files.length}`;
-        UI.bar.style.background = "var(--primary)";
-        UI.bar.style.width = "0%";
+// 3. Gửi File (Tối ưu cho máy 32-bit & File cực lớn)
+async function sendFiles() {
+    const fs = UI.file.files;
+    UI.pBox.style.display = "block";
+    
+    for (let f of fs) {
+        UI.fName.innerText = "📤 Đang gửi: " + f.name;
+        const meta = new TextEncoder().encode(JSON.stringify({n: f.name, s: f.size}));
+        const mPkt = new Uint8Array(meta.length + 1); mPkt[0] = 2; mPkt.set(meta, 1);
+        peer.send(mPkt);
 
-        const m = new TextEncoder().encode(JSON.stringify({name: file.name, size: file.size}));
-        const mp = new Uint8Array(m.length + 1); mp[0] = 2; mp.set(m, 1);
-        peer.send(mp);
+        // Đợi máy nhận chọn chỗ lưu
+        await new Promise(r => { 
+            const check = (d) => { if(d[0]===5){ peer.off('data', check); r(); } };
+            peer.on('data', check);
+        });
 
-        startTime = Date.now();
-        const reader = file.stream().getReader();
+        const reader = f.stream().getReader();
         let sent = 0;
-        peer._channel.bufferedAmountLowThreshold = 4 * 1024 * 1024;
+        startTime = Date.now();
+
+        // PHANH BỘ NHỚ: Giới hạn 512KB cho máy 32-bit
+        peer._channel.bufferedAmountLowThreshold = 256 * 1024; 
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            for (let j = 0; j < value.length; j += 131072) {
-                if (peer._channel.bufferedAmount > 4 * 1024 * 1024) {
+
+            for (let i = 0; i < value.length; i += 16384) { // Mỗi gói 16KB
+                if (peer._channel.bufferedAmount > 512 * 1024) {
                     await new Promise(r => { peer._channel.onbufferedamountlow = () => { peer._channel.onbufferedamountlow = null; r(); }; });
                 }
-                const c = value.slice(j, j + 131072);
-                const pkt = new Uint8Array(c.length + 1); pkt[0] = 1; pkt.set(c, 1);
-                peer.send(pkt);
+                const c = value.slice(i, i + 16384);
+                const p = new Uint8Array(c.length + 1); p[0] = 1; p.set(c, 1);
+                peer.send(p);
                 sent += c.length;
-                updateUI(sent, file.size);
+                updateUI(sent, f.size);
             }
         }
-
-        await new Promise(r => {
-            const ck = setInterval(() => {
-                if (peer._channel.bufferedAmount === 0) {
-                    peer.send(new Uint8Array([3])); 
-                    clearInterval(ck); r();
-                }
-            }, 100);
-        });
-
-        UI.status.innerText = "⏳ Đợi xác nhận từ máy nhận...";
-        while (!isNextReady) { await new Promise(r => setTimeout(r, 100)); }
-        force100UI(`✅ Đã gửi xong: ${file.name}`);
-        await new Promise(r => setTimeout(r, 800));
-    }
-    UI.status.innerText = "🎉 Gửi thành công!";
-}
-
-function updateUI(curr, total) {
-    const p = Math.min(99, Math.floor(curr / total * 100));
-    UI.bar.style.width = p + "%";
-    UI.percent.innerText = p + "%";
-    const s = (Date.now() - startTime) / 1000;
-    UI.speed.innerText = (curr / 1024 / 1024 / (s || 1)).toFixed(1) + " MB/s";
-}
-
-function force100UI(msg) {
-    UI.bar.style.transition = "width 0.3s ease-out";
-    UI.bar.style.width = "100%";
-    UI.percent.innerText = "100%";
-    UI.bar.style.background = "var(--success)";
-    UI.status.innerText = msg;
-    if (navigator.vibrate) navigator.vibrate(100);
-}
-
-UI.file.onchange = () => {
-    const fs = UI.file.files;
-    if (fs.length > 0) {
-        UI.fileInfo.innerText = `Đã chọn ${fs.length} file (${(Array.from(fs).reduce((a,b)=>a+b.size,0)/1024/1024).toFixed(1)} MB)`;
-        // TỰ ĐỘNG GỬI NẾU ĐÃ KẾT NỐI SẴN
-        if (peer && peer.connected) handleMultiSender(fs);
-    }
-};
-
-setInterval(() => {
-    if (myIP) {
-        // Cập nhật lại thời gian sống của mình trên Firebase
-        updateProfile();
         
-        // Thông báo trạng thái nhẹ nhàng để người dùng biết app vẫn đang quét
-        console.log("Đang tự động quét thiết bị...");
+        while(peer._channel.bufferedAmount > 0) await new Promise(r => setTimeout(r, 100));
+        peer.send(new Uint8Array([3]));
+        await new Promise(r => { const c=(d)=>{if(d[0]===4){peer.off('data',c); r();}}; peer.on('data',c); });
     }
-}, 3000);
+    UI.stt.innerText = "✅ Gửi tất cả thành công!";
+}
+
+let totalReceived = 0;
+function updateUI(curr, total, isRecv = false) {
+    if(isRecv) {
+        totalReceived += curr;
+        UI.pct.innerText = (totalReceived / 1024 / 1024).toFixed(1) + " MB";
+    } else {
+        const p = Math.floor(curr / total * 100);
+        UI.bar.style.width = p + "%";
+        UI.pct.innerText = p + "%";
+    }
+    const sec = (Date.now() - startTime) / 1000;
+    UI.spd.innerText = ( (isRecv?totalReceived:curr) / 1024 / 1024 / (sec || 1)).toFixed(1) + " MB/s";
+}
+
+UI.file.onchange = () => { UI.fileInfo.innerText = "Đã chọn " + UI.file.files.length + " file"; };
 </script>
 </body>
 </html>
